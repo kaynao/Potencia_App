@@ -1,1 +1,0 @@
-# Potencia_App
