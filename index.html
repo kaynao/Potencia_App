@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#3B0944">
+  <title>Gestão de Vendas - Açaíteria</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="container">
+  <header class="app-header">
+    <h1>🍧 Gestão de Vendas - Potência do Açaí</h1>
+  </header>
+
+  <!-- NAVEGAÇÃO POR ABAS -->
+  <nav class="tab-nav">
+    <button class="tab-btn active" onclick="alternarAba('vendas')">🛒 Vendas</button>
+    <button class="tab-btn" onclick="alternarAba('entregas')">🛵 Entregas <span id="badge-entregas" class="badge">0</span></button>
+    <button class="tab-btn" onclick="alternarAba('produtos')">🏷️ Cadastrar Produtos</button>
+    <button class="tab-btn" onclick="alternarAba('estatisticas')">📊 Estatísticas</button>
+    <button class="tab-btn" onclick="alternarAba('estoque')">📦 Estoque</button>
+  </nav>
+
+  <!-- ================= ABA 1: VENDAS ================= -->
+  <main id="aba-vendas" class="tab-content active">
+    <!-- DASHBOARD DE VENDAS HOJE -->
+    <section class="card mb-16">
+      <h2>📌 Resumo de Hoje</h2>
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <span class="metric-title">Vendas Hoje</span>
+          <span class="metric-value" id="dash-vendas-hoje">R$ 0,00</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-title">Pedidos</span>
+          <span class="metric-value" id="dash-pedidos-hoje">0</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-title">Ticket Médio</span>
+          <span class="metric-value" id="dash-ticket-hoje">R$ 0,00</span>
+        </div>
+        <div class="metric-card highlight">
+          <span class="metric-title">Mais Vendido Hoje</span>
+          <span class="metric-value-sm" id="dash-top-hoje">-</span>
+        </div>
+      </div>
+    </section>
+
+    <div class="layout-grid">
+      <!-- FORMULÁRIO DE NOVO PEDIDO -->
+      <section class="card">
+        <h2>Novo Pedido</h2>
+        
+        <div class="form-group">
+          <label for="categoria">Categoria</label>
+          <select id="categoria"></select>
+        </div>
+
+        <div class="form-group row">
+          <div>
+            <label for="produto">Item / Tamanho</label>
+            <select id="produto"></select>
+          </div>
+          <div class="col-sm">
+            <label for="qtd">Qtd</label>
+            <input type="number" id="qtd" value="1" min="1">
+          </div>
+        </div>
+
+        <!-- ÁREA DE PERSONALIZAÇÃO -->
+        <div class="custom-box" id="box-personalizacao">
+          <label class="chk-option">
+            <input type="checkbox" id="chk-creme">
+            Adicionar Creme (Açaí + Creme)
+          </label>
+
+          <div class="form-group row border-top">
+            <div>
+              <label for="qtd-extra">Complementos Extras (+ R$ 1,00/un):</label>
+            </div>
+            <div class="col-sm">
+              <input type="number" id="qtd-extra" value="0" min="0">
+            </div>
+          </div>
+
+          <h3>Adicionais Especiais no Copo:</h3>
+          <div class="adicionais-grid" id="grid-adicionais"></div>
+        </div>
+
+        <button type="button" class="btn btn-secondary" id="btn-add-item">+ Adicionar Item ao Pedido</button>
+
+        <hr class="divider">
+
+        <label>Itens do Pedido Atual:</label>
+        <div class="cart-list" id="carrinho"></div>
+
+        <div class="form-group row">
+          <div>
+            <label for="pagamento">Pagamento</label>
+            <select id="pagamento">
+              <option value="Dinheiro">💵 Dinheiro</option>
+              <option value="Pix">⚡ Pix</option>
+              <option value="Cartão">💳 Cartão</option>
+              <option value="fidelidade">🎁 Cartão Fidelidade (Grátis)</option>
+            </select>
+          </div>
+          <div>
+            <label for="entrega">Tipo de Entrega</label>
+            <select id="entrega">
+              <option value="0">Retirada (R$ 0,00)</option>
+              <option value="1">Entrega (+ R$ 1,00)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- DADOS DA ENTREGA (CAMPO DINÂMICO) -->
+        <div class="custom-box" id="box-dados-entrega">
+          <div class="form-group">
+            <label for="cliente-nome">Nome do Cliente / Endereço:</label>
+            <input type="text" id="cliente-nome" placeholder="Ex: João - Rua A, nº 123">
+          </div>
+        </div>
+
+        <!-- CAMPO DE TROCO -->
+        <div class="custom-box" id="box-troco" style="margin-top: 5px;">
+          <div class="form-group row" style="margin-bottom: 0;">
+            <div>
+              <label for="valor-entregue">Valor Entregue pelo Cliente (R$):</label>
+              <input type="number" id="valor-entregue" placeholder="Ex: 50.00" step="0.01" min="0">
+            </div>
+          </div>
+          <div style="margin-top: 10px; font-weight: 700; color: var(--primary); font-size: 0.95rem;">
+            Troco a Devolver: <span id="troco-calculado" style="color: var(--danger);">R$ 0,00</span>
+          </div>
+        </div>
+
+        <div class="total-box">
+          Total: R$ <span id="total-val">0,00</span>
+        </div>
+
+        <button class="btn btn-primary" id="btn-finalizar">Finalizar Venda</button>
+      </section>
+
+      <!-- HISTÓRICO DE VENDAS -->
+      <section class="card">
+        <h2>Histórico Geral de Vendas</h2>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Data/Hora</th>
+                <th>Pagamento</th>
+                <th>Tipo</th>
+                <th>Valor</th>
+                <th class="text-center">Ação</th>
+              </tr>
+            </thead>
+            <tbody id="historico-corpo"></tbody>
+          </table>
+        </div>
+        <button class="btn btn-secondary mt-15" id="btn-exportar">📥 Exportar Dados (CSV)</button>
+      </section>
+    </div>
+  </main>
+
+  <!-- ================= ABA 2: ENTREGAS ================= -->
+  <main id="aba-entregas" class="tab-content">
+    <section class="card mb-16">
+      <h2>🛵 Painel de Entregas em Andamento</h2>
+      <p style="font-size:0.85rem; color: var(--text-muted); margin-bottom: 12px;">
+        Acompanhe abaixo o tempo de espera dos pedidos que estão para entrega.
+      </p>
+
+      <div class="delivery-grid" id="container-entregas">
+        <!-- Cards de Entregas dinâmicos -->
+      </div>
+    </section>
+  </main>
+
+  <!-- ================= ABA 3: CADASTRO DE PRODUTOS ================= -->
+  <main id="aba-produtos" class="tab-content">
+    <div class="layout-grid">
+      <section class="card">
+        <h2 id="prod-form-title">Cadastrar / Editar Produto</h2>
+        <form id="form-produto">
+          <input type="hidden" id="prod-id">
+          
+          <div class="form-group">
+            <label for="prod-nome">Nome do Produto</label>
+            <input type="text" id="prod-nome" placeholder="Ex: Açaí" required>
+          </div>
+
+          <div class="form-group">
+            <label for="prod-categoria">Categoria</label>
+            <input type="text" id="prod-categoria" placeholder="Ex: Copos, Bebidas, Salgados" required>
+          </div>
+
+          <div class="form-group">
+            <label for="prod-tamanho">Tamanho / Variação</label>
+            <input type="text" id="prod-tamanho" placeholder="Ex: 500ml, 1L, Unidade">
+          </div>
+
+          <div class="form-group row">
+            <div>
+              <label for="prod-preco">Preço Padrão (R$)</label>
+              <input type="number" id="prod-preco" step="0.01" placeholder="20.00" required>
+            </div>
+            <div>
+              <label for="prod-preco-creme">Preço c/ Creme (Opcional)</label>
+              <input type="number" id="prod-preco-creme" step="0.01" placeholder="22.00">
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="margin-top: 10px;">Salvar Produto</button>
+          <button type="button" class="btn btn-secondary" id="btn-cancelar-prod" style="margin-top: 8px; display:none;">Cancelar Edição</button>
+        </form>
+      </section>
+
+      <section class="card">
+        <h2>Produtos Cadastrados</h2>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Nome / Tamanho</th>
+                <th>Categoria</th>
+                <th>Preço</th>
+                <th class="text-center">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="tabela-produtos-corpo"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- ================= ABA 4: ESTATÍSTICAS ================= -->
+  <main id="aba-estatisticas" class="tab-content">
+    <section class="card mb-16">
+      <h2>📈 Estatísticas Gerais de Vendas</h2>
+      
+      <div class="stats-container">
+        <div class="stat-box">
+          <div class="stat-icon">💰</div>
+          <div>
+            <span class="stat-label">Número de Vendas</span>
+            <span class="stat-value" id="st-num-vendas">0</span>
+          </div>
+        </div>
+
+        <div class="stat-box">
+          <div class="stat-icon">🏷️</div>
+          <div>
+            <span class="stat-label">Ticket Médio</span>
+            <span class="stat-value" id="st-ticket-medio">R$ 0,00</span>
+          </div>
+        </div>
+
+        <div class="stat-box">
+          <div class="stat-icon">🏆</div>
+          <div>
+            <span class="stat-label">Produto Mais Vendido</span>
+            <span class="stat-value" id="st-top-produto">-</span>
+          </div>
+        </div>
+
+        <div class="stat-box">
+          <div class="stat-icon">⏰</div>
+          <div>
+            <span class="stat-label">Horário de Maior Movimento</span>
+            <span class="stat-value" id="st-horario-pico">-</span>
+          </div>
+        </div>
+
+        <div class="stat-box">
+          <div class="stat-icon">💳</div>
+          <div>
+            <span class="stat-label">Forma de Pagamento Mais Usada</span>
+            <span class="stat-value" id="st-pagamento-top">-</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- ABA DE ESTOQUE DE INSUMOS -->
+<div id="aba-estoque" class="tab-content">
+  <!-- CARDS DE METRICAS DO ESTOQUE -->
+  <div class="dash-grid">
+    <div class="card">
+      <h3>Total de Insumos</h3>
+      <p id="st-est-total" class="dash-val">0</p>
+    </div>
+    <div class="card">
+      <h3>Alertas de Estoque Baixo</h3>
+      <p id="st-est-criticos" class="dash-val" style="color: var(--danger);">0</p>
+    </div>
+    <div class="card">
+      <h3>Valor Total em Estoque</h3>
+      <p id="st-est-valor" class="dash-val">R$ 0,00</p>
+    </div>
+  </div>
+
+  <div class="main-grid" style="margin-top: 20px;">
+    <!-- FORMULÁRIO DE CADASTRO/EDIÇÃO DE INSUMOS -->
+    <div class="card">
+      <h2 id="est-form-title">Cadastrar Novo Insumo</h2>
+      <form id="form-estoque">
+        <input type="hidden" id="est-id">
+        
+        <div class="form-group">
+          <label for="est-nome">Nome do Insumo/Material:</label>
+          <input type="text" id="est-nome" required placeholder="Ex: Copo 500ml, Caixa Açaí 10L">
+        </div>
+
+        <div class="form-group">
+          <label for="est-categoria">Categoria:</label>
+          <select id="est-categoria" required>
+            <option value="Insumo Base">Insumo Base (Açaí/Cremes)</option>
+            <option value="Embalagens">Embalagens & Copos</option>
+            <option value="Complementos">Complementos & Toppings</option>
+            <option value="Bebidas">Bebidas Revenda</option>
+            <option value="Outros">Outros</option>
+          </select>
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+          <div class="form-group" style="flex: 1;">
+            <label for="est-qtd">Qtd. Atual:</label>
+            <input type="number" id="est-qtd" step="0.01" min="0" required placeholder="0">
+          </div>
+          <div class="form-group" style="flex: 1;">
+            <label for="est-unidade">Unidade:</label>
+            <select id="est-unidade" required>
+              <option value="un">Unidade (un)</option>
+              <option value="cx">Caixa (cx)</option>
+              <option value="balde">Balde</option>
+              <option value="pct">Pacote (pct)</option>
+              <option value="kg">Quilos (kg)</option>
+              <option value="L">Litros (L)</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+          <div class="form-group" style="flex: 1;">
+            <label for="est-minimo">Estoque Mínimo:</label>
+            <input type="number" id="est-minimo" step="0.01" min="0" required placeholder="Alerta">
+          </div>
+          <div class="form-group" style="flex: 1;">
+            <label for="est-custo">Custo Un. (R$):</label>
+            <input type="number" id="est-custo" step="0.01" min="0" required placeholder="0.00">
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width:100%; margin-top: 10px;">Salvar Insumo</button>
+        <button type="button" id="btn-cancelar-estoque" class="btn btn-secondary" style="width:100%; margin-top: 5px; display:none;">Cancelar Edição</button>
+      </form>
+    </div>
+
+    <!-- TABELA DE INSUMOS CADASTRADOS -->
+    <div class="card">
+      <h2>Controle de Estoque</h2>
+      <div style="overflow-x: auto;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Status</th>
+              <th>Insumo</th>
+              <th>Categoria</th>
+              <th>Atual</th>
+              <th>Mínimo</th>
+              <th>Custo Un.</th>
+              <th>Total Investido</th>
+              <th class="text-center">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="tabela-estoque-corpo">
+            <!-- Renderizado via JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="js/script.js"></script>
+<script src="js/estoque.js"></script>
+</body>
+</html>
